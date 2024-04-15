@@ -17,8 +17,9 @@ jobs:
           script: |
             const fs = require('fs');
             const reviewers = JSON.parse(fs.readFileSync('.github/workflows/reviewers.json'));
-            console.log(reviewers);
-            return reviewers['reviewers'];
+            const test = context.payload.pull_request.requested_reviewers;
+            console.log(test);
+            return reviewers['reviewers'][0];
           result-encoding: string
 
       - name: pr reviewer 되면 slack 알림 보냄
@@ -33,15 +34,10 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "리뷰어로 할당되었습니다.\n * 제목: ${{ github.event.pull_request.title }}\n * 리뷰어: {{ .login | lookup('reviewers.json', '.login') || .login }}\n * url: <${{ github.event.pull_request.html_url }}|리뷰하러 가기>"
+                    "text": "리뷰어로 할당되었습니다.\n * 제목: ${{ github.event.pull_request.title }}\n * 리뷰어: ${{ github.event.pull_request.requested_reviewers[0].login }}\n * url: <${{ github.event.pull_request.html_url }}|리뷰하러 가기>"
                   }
                 }
               ]
             }
-            | .forEach(reviewer => {
-              return {
-                login: reviewer
-              };
-            });
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_THE_ZERO_DEV }}
