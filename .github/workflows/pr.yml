@@ -17,7 +17,7 @@ jobs:
           script: |
             const fs = require('fs');
             const reviewers = JSON.parse(fs.readFileSync('.github/workflows/reviewers.json'));
-            const test = context.payload.pull_request;
+            const test = context.payload.pull_request.requested_reviewers[0].login;
             console.log(test);
             return reviewers['hyejun01'];
           result-encoding: string
