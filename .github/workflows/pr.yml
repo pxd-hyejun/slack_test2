@@ -19,7 +19,7 @@ jobs:
             const reviewers = JSON.parse(fs.readFileSync('.github/workflows/reviewers.json'));
             const test = context.payload.pull_request.requested_reviewers.map((user) => {
               const login = user.login;
-              const mappedValue = loginMap[login];
+              const mappedValue = reviewers[login];
               return mappedValue ? `@${mappedValue}` : `No mapping found for ${login}`;
             })
             console.log(test);
