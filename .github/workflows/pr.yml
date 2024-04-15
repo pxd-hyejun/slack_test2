@@ -1,0 +1,42 @@
+name: hello
+
+on:
+  pull_request:
+    types: [review_requested]
+
+jobs:
+  specific_review_requested:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: 리뷰어 목록 가져오기
+        id: reviewers
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const reviewers = JSON.parse(fs.readFileSync('.github/workflows/reviewers.json'));
+            console.log(reviewers);
+            return reviewers['reviewers'][0];
+          result-encoding: string
+
+      - name: pr reviewer 되면 slack 알림 보냄
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: ${{ secrets.TEST_CHANNEL }} # Slack 채널 ID
+          payload: |
+            {
+              "text": "pr review request",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "리뷰어로 할당되었습니다.\n * 제목: ${{ github.event.pull_request.title }}\n * 리뷰어: \n * url: <${{ github.event.pull_request.html_url }}|리뷰하러 가기>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_THE_ZERO_DEV }}
