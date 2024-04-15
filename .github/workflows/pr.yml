@@ -10,6 +10,27 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Slack 채널 멤버 목록 가져오기
+        id: slack_members
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { Octokit } = require('@octokit/rest');
+            const github = new Octokit();
+            const slackChannelId = 'YOUR_SLACK_CHANNEL_ID'; // Slack 채널 ID 입력
+
+            const getSlackMembers = async () => {
+              const response = await github.request('GET /orgs/{org}/teams/{team}/members', {
+                org: 'YOUR_GITHUB_ORG', // GitHub 조직 이름 입력
+                team: 'YOUR_GITHUB_TEAM', // GitHub 팀 이름 입력
+              });
+              return response.data.map((member) => member.login);
+            };
+
+            const slackMembers = await getSlackMembers();
+            return JSON.stringify(slackMembers);
+          result-encoding: string
+
       - name: 리뷰어 목록 가져오기
         id: reviewers
         uses: actions/github-script@v6
@@ -37,7 +58,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "리뷰어로 할당되었습니다.\n * 제목: ${{ github.event.pull_request.title }}\n * 리뷰어: <${{steps.reviewers.outputs.result}}> \n * 링크: <${{ github.event.pull_request.html_url }}|리뷰하러 가기>"
+                    "text": "${{ steps.slack_members.outputs.result }}}리뷰어로 할당되었습니다.\n * 제목: ${{ github.event.pull_request.title }}\n * 리뷰어: <${{steps.reviewers.outputs.result}}> \n * 링크: <${{ github.event.pull_request.html_url }}|리뷰하러 가기>"
                   }
                 }
               ]
