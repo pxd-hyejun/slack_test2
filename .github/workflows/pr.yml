@@ -17,7 +17,7 @@ jobs:
           script: |
             const fs = require('fs');
             const reviewers = JSON.parse(fs.readFileSync('.github/workflows/reviewers.json'));
-            const test = context.payload.pull_request.reviewers;
+            const test = context.payload.pull_request;
             console.log(test);
             return reviewers['hyejun01'];
           result-encoding: string
@@ -34,7 +34,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "리뷰어로 할당되었습니다.\n * 제목: ${{ github.event.pull_request.title }}\n * 리뷰어: ${{ github.event.pull_request.requested_reviewers[0].login }}\n * url: <${{ github.event.pull_request.html_url }}|리뷰하러 가기>"
+                    "text": "${{steps.reviewers}}리뷰어로 할당되었습니다.\n * 제목: ${{ github.event.pull_request.title }}\n * 리뷰어: ${{ github.event.pull_request.requested_reviewers[0].login }}\n * url: <${{ github.event.pull_request.html_url }}|리뷰하러 가기>"
                   }
                 }
               ]
