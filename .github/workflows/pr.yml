@@ -17,9 +17,13 @@ jobs:
           script: |
             const fs = require('fs');
             const reviewers = JSON.parse(fs.readFileSync('.github/workflows/reviewers.json'));
-            const test = context.payload.pull_request.requested_reviewers[0].login;
+            const test = context.payload.pull_request.requested_reviewers.map((user) => {
+              const login = user.login;
+              const mappedValue = loginMap[login];
+              return mappedValue ? mappedValue : `No mapping found for ${login}`;
+            })
             console.log(test);
-            return reviewers['hyejun01'];
+            return test;
           result-encoding: string
 
       - name: pr reviewer 되면 slack 알림 보냄
