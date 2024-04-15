@@ -19,7 +19,7 @@ jobs:
             const reviewers = JSON.parse(fs.readFileSync('.github/workflows/reviewers.json'));
             const test = context.payload.pull_request.reviewers;
             console.log(test);
-            return reviewers['reviewers'][0];
+            return reviewers['hyejun01'];
           result-encoding: string
 
       - name: pr reviewer 되면 slack 알림 보냄
