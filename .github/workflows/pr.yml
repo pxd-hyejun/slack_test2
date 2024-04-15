@@ -20,10 +20,10 @@ jobs:
             const test = context.payload.pull_request.requested_reviewers.map((user) => {
               const login = user.login;
               const mappedValue = reviewers[login];
-              return mappedValue ? `@${mappedValue}` : `No mapping found for ${login}`;
+              return mappedValue ? mappedValue : `No mapping found for ${login}`;
             })
-            console.log(test);
             return test.join(', ');
+          result-encoding: string
 
       - name: pr reviewer 되면 slack 알림 보냄
         uses: slackapi/slack-github-action@v1.24.0
