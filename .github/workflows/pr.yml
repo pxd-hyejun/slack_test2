@@ -24,7 +24,6 @@ jobs:
             })
             console.log(test);
             return test.join(', ');
-          result-encoding: string
 
       - name: pr reviewer 되면 slack 알림 보냄
         uses: slackapi/slack-github-action@v1.24.0
