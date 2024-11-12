@@ -31,7 +31,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         with:
           script: |
-            const axios = require('axios');
+            const https = require('https');
             const reviewers = JSON.parse('${{ steps.reviewers.outputs.result }}');
 
             for (const reviewer of reviewers) {
@@ -49,10 +49,28 @@ jobs:
                 ]
               };
 
-              await axios.post('https://slack.com/api/chat.postMessage', message, {
+              const options = {
+                hostname: 'slack.com',
+                path: '/api/chat.postMessage',
+                method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${process.env.SLACK_BOT_TOKEN}`,
                   'Content-Type': 'application/json'
                 }
+              };
+
+              const req = https.request(options, (res) => {
+                let data = '';
+                res.on('data', (chunk) => { data += chunk; });
+                res.on('end', () => {
+                  console.log('Slack response:', data);
+                });
               });
+
+              req.on('error', (error) => {
+                console.error('Error:', error);
+              });
+
+              req.write(JSON.stringify(message));
+              req.end();
             }
