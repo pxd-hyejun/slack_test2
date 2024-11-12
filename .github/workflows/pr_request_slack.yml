@@ -41,7 +41,7 @@ jobs:
             });
             const dDayLabel = pr.labels
               .find(label => label.name.startsWith('D-'))?.name || 'D-3';
-            return JSON.stringify({ dDayLabel });
+            core.setOutput('dday', dDayLabel);
 
       - name: 리뷰어 목록 가져오기
         id: reviewers
@@ -66,7 +66,7 @@ jobs:
           script: |
             const https = require('https');
             const reviewers = JSON.parse('${{ steps.reviewers.outputs.result }}');
-            const prInfo = JSON.parse('${{ steps.pr_info.outputs.result }}');
+            const dDayLabel = '${{ steps.pr_info.outputs.dday }}';
 
             for (const reviewer of reviewers) {
               const message = {
@@ -77,7 +77,7 @@ jobs:
                     type: "section",
                     text: {
                       type: "mrkdwn",
-                      text: `<@${reviewer}>님 리뷰어로 할당되었습니다.\n • 제목: ${{ github.event.pull_request.title }}\n • 마감: ${prInfo.dDayLabel}\n • 링크: <${{ github.event.pull_request.html_url }}|리뷰하러 가기>`
+                      text: `<@${reviewer}>님 리뷰어로 할당되었습니다.\n • 제목: ${{ github.event.pull_request.title }}\n • 마감: ${dDayLabel}\n • 링크: <${{ github.event.pull_request.html_url }}|리뷰하러 가기>`
                     }
                   }
                 ]
