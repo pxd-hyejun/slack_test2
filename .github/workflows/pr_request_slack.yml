@@ -17,12 +17,12 @@ jobs:
           script: |
             const fs = require('fs');
             const workers = JSON.parse(fs.readFileSync('.github/workflows/reviewers.json'));
-            const mention = context.payload.pull_request.requested_reviewers.map((user) => {
+            // Slack ID만 반환하도록 수정 (@ 기호 제외)
+            const mentions = context.payload.pull_request.requested_reviewers.map((user) => {
               const login = user.login;
-              const mappedValue = workers[login];
-              return mappedValue ? `<@${mappedValue}>` : `No mapping found for ${login}`;
-            })
-            return mention.join(', ');
+              return workers[login] || null;
+            }).filter(id => id !== null);
+            return JSON.stringify(mentions);
           result-encoding: string
 
       - name: PR 리뷰어들에게 개별 DM 보내기
@@ -43,7 +43,7 @@ jobs:
                     type: "section",
                     text: {
                       type: "mrkdwn",
-                      text: "${{ steps.reviewers.outputs.result }}님 리뷰어로 할당되었습니다.\n • 제목: ${{ github.event.pull_request.title }}\n • 링크: <${{ github.event.pull_request.html_url }}|리뷰하러 가기>"
+                      text: "@reviewer님 리뷰어로 할당되었습니다.\n • 제목: ${{ github.event.pull_request.title }}\n • 링크: <${{ github.event.pull_request.html_url }}|리뷰하러 가기>"
                     }
                   }
                 ]
