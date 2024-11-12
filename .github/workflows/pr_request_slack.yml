@@ -21,7 +21,11 @@ jobs:
 
   notify_reviewer:
     runs-on: ubuntu-latest
+    # PR이 처음 열렸을 때는 add_label job이 필요
     needs: [add_label]
+    if: |
+      github.event.action == 'review_requested' ||
+      (github.event.action == 'opened' && always())
     steps:
       - uses: actions/checkout@v3
 
