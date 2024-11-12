@@ -50,6 +50,7 @@ jobs:
           script: |
             const fs = require('fs');
             const workers = JSON.parse(fs.readFileSync('.github/workflows/reviewers.json'));
+            // Slack ID만 반환하도록 수정 (@ 기호 제외)
             const mentions = context.payload.pull_request.requested_reviewers.map((user) => {
               const login = user.login;
               return workers[login] || null;
