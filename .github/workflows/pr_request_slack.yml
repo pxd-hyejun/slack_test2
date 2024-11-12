@@ -37,4 +37,56 @@ jobs:
             }).filter(id => id !== null);
             return JSON.stringify(mentions);
 
-      # 나
+      - name: PR 리뷰어들에게 개별 DM 보내기
+        uses: actions/github-script@v6
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        with:
+          script: |
+            const https = require('https');
+            const reviewers = JSON.parse('${{ steps.reviewers.outputs.result }}');
+
+            // PR의 라벨 중 'D-' 로 시작하는 라벨 찾기
+            const dDayLabel = context.payload.pull_request.labels
+              .find(label => label.name.startsWith('D-'))?.name || '마감일 미정';
+
+            for (const reviewer of reviewers) {
+              const message = {
+                channel: reviewer,
+                text: "PR 리뷰 요청",
+                blocks: [
+                  {
+                    type: "section",
+                    text: {
+                      type: "mrkdwn",
+                      text: `<@${reviewer}>님 리뷰어로 할당되었습니다.\n • 제목: <${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>\n • 마감: ${dDayLabel}`
+                    }
+                  }
+                ]
+              };
+
+              const options = {
+                hostname: 'slack.com',
+                path: '/api/chat.postMessage',
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${process.env.SLACK_BOT_TOKEN}`,
+                  'Content-Type': 'application/json'
+                }
+              };
+
+              const req = https.request(options, (res) => {
+                let data = '';
+                res.on('data', (chunk) => { data += chunk; });
+                res.on('end', () => {
+                  console.log('Slack response:', data);
+                });
+              });
+
+              req.on('error', (error) => {
+                console.error('Error:', error);
+              });
+
+              req.write(JSON.stringify(message));
+              req.end();
+            }
