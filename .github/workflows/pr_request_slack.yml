@@ -17,12 +17,12 @@ jobs:
           script: |
             const fs = require('fs');
             const workers = JSON.parse(fs.readFileSync('.github/workflows/reviewers.json'));
-            // Slack ID만 반환하도록 수정 (@ 기호 제외)
-            const mentions = context.payload.pull_request.requested_reviewers.map((user) => {
+            const mention = context.payload.pull_request.requested_reviewers.map((user) => {
               const login = user.login;
-              return workers[login] || null;
-            }).filter(id => id !== null);
-            return JSON.stringify(mentions);
+              const mappedValue = workers[login];
+              return mappedValue ? `<@${mappedValue}>` : `No mapping found for ${login}`;
+            })
+            return mention.join(', ');
           result-encoding: string
 
       - name: PR 리뷰어들에게 개별 DM 보내기
