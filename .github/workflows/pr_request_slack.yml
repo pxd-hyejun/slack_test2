@@ -10,20 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Get PR Info with Labels
-        id: pr_info
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const { data: pr } = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number
-            });
-            const dDayLabel = pr.labels
-              .find(label => label.name.startsWith('D-'))?.name || 'D-3';
-            return JSON.stringify({ dDayLabel });
-
       - name: 리뷰어 목록 가져오기
         id: reviewers
         uses: actions/github-script@v6
@@ -31,11 +17,13 @@ jobs:
           script: |
             const fs = require('fs');
             const workers = JSON.parse(fs.readFileSync('.github/workflows/reviewers.json'));
+            // Slack ID만 반환하도록 수정 (@ 기호 제외)
             const mentions = context.payload.pull_request.requested_reviewers.map((user) => {
               const login = user.login;
               return workers[login] || null;
             }).filter(id => id !== null);
             return JSON.stringify(mentions);
+          result-encoding: string
 
       - name: PR 리뷰어들에게 개별 DM 보내기
         uses: actions/github-script@v6
