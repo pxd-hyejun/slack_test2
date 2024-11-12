@@ -10,34 +10,33 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Pull Request 정보 가져오기
-        id: pull_request_user
+      - name: Pull Request 작성자 Slack ID 가져오기
+        id: pr_author
         uses: actions/github-script@v6
         with:
           script: |
             const fs = require('fs');
             const workers = JSON.parse(fs.readFileSync('.github/workflows/reviewers.json'));
-            const mention = `<@${workers[context.payload.pull_request.user.login]}>`;
-            return mention;
+            const authorId = workers[context.payload.pull_request.user.login];
+            return authorId;
           result-encoding: string
 
-      - name: review approve 되면 slack 알림 보냄
+      - name: PR 작성자에게 Approve 알림 보내기
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          channel-id: ${{ secrets.CHANNEL_ID }} # Slack 채널 ID
+          channel-id: ${{ steps.pr_author.outputs.result }} # PR 작성자의 Slack ID
           payload: |
             {
-                "text": "pr Approve",
-                "blocks": [
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": "리뷰가 Approve 되었습니다.\n • 제목: ${{ github.event.pull_request.title }} \n • Assinger:${{ steps.pull_request_user.outputs.result }} \n • 링크:<${{ github.event.pull_request.html_url }}|머지하러 가기>"
-                        }
-                    }
-                ]
+              "text": "PR Approve 알림",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<@${{ steps.pr_author.outputs.result }}>님의 PR이 Approve 되었습니다.\n • 제목: ${{ github.event.pull_request.title }}\n • 승인자: <@${{ github.event.review.user.login }}>\n • 링크: <${{ github.event.pull_request.html_url }}|머지하러 가기>"
+                  }
+                }
+              ]
             }
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }} # Slack 토큰
-
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
