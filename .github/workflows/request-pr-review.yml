@@ -1,0 +1,75 @@
+name: Daily PR Reminder
+
+on:
+  schedule:
+    - cron: "0 1 * * 1-5" # UTC 기준 01:00 (한국 시간 10:00)
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get Assigned PRs
+        id: get_prs
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const workers = JSON.parse(fs.readFileSync('.github/workflows/reviewers.json'));
+
+            // 본인의 GitHub ID를 여기에 설정
+            const MY_GITHUB_ID = 'your-github-id';
+            const MY_SLACK_ID = workers[MY_GITHUB_ID];
+
+            // 할당된 PR 목록 가져오기
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+
+            // 내가 리뷰어로 할당된 PR 필터링
+            const assignedPRs = prs.filter(pr => 
+              pr.requested_reviewers.some(reviewer => reviewer.login === MY_GITHUB_ID)
+            );
+
+            // PR 정보 포맷팅
+            let message = "🔍 *오늘의 리뷰할 PR 목록*\n\n";
+
+            if (assignedPRs.length === 0) {
+              message += "> 현재 할당된 PR이 없습니다.";
+            } else {
+              assignedPRs.forEach(pr => {
+                const dDayLabel = pr.labels
+                  .find(label => label.name.startsWith('D-'))?.name || '마감일 미정';
+                message += `> • <${pr.html_url}|${pr.title}>\n`;
+                message += `>   - 작성자: ${pr.user.login}\n`;
+                message += `>   - 마감: ${dDayLabel}\n\n`;
+              });
+            }
+
+            return JSON.stringify({
+              slackId: MY_SLACK_ID,
+              message: message
+            });
+
+      - name: Send Slack Message
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: ${{ fromJson(steps.get_prs.outputs.result).slackId }}
+          payload: |
+            {
+              "text": "Daily PR Reminder",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJson(fromJson(steps.get_prs.outputs.result).message) }}
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
