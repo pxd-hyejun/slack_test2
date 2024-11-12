@@ -56,7 +56,6 @@ jobs:
           result-encoding: string
 
       - name: PR 리뷰어들에게 개별 DM 보내기
-        if: steps.reviewers.outputs.result != '[]' # 리뷰어가 있을 때만 실행
         uses: actions/github-script@v6
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
