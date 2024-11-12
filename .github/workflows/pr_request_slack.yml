@@ -34,6 +34,10 @@ jobs:
             const https = require('https');
             const reviewers = JSON.parse('${{ steps.reviewers.outputs.result }}');
 
+            // PR의 라벨 중 'D-' 로 시작하는 라벨 찾기
+            const dDayLabel = context.payload.pull_request.labels
+              .find(label => label.name.startsWith('D-'))?.name || '마감일 미정';
+
             for (const reviewer of reviewers) {
               const message = {
                 channel: reviewer,
@@ -43,7 +47,7 @@ jobs:
                     type: "section",
                     text: {
                       type: "mrkdwn",
-                      text: `<@${reviewer}>님 리뷰어로 할당되었습니다.\n • 제목: ${{ github.event.pull_request.title }}\n • 링크: <${{ github.event.pull_request.html_url }}|리뷰하러 가기>`
+                      text: `<@${reviewer}>님 리뷰어로 할당되었습니다.\n • 제목: <${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>\n • 마감: ${dDayLabel}`
                     }
                   }
                 ]
