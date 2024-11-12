@@ -21,8 +21,6 @@ jobs:
 
   notify_reviewer:
     runs-on: ubuntu-latest
-    # 리뷰어가 요청되었을 때만 실행하고, PR이 처음 열린 경우 라벨 추가 후 실행
-    if: github.event.action == 'review_requested' || github.event.action == 'opened'
     needs: [add_label]
     steps:
       - uses: actions/checkout@v3
